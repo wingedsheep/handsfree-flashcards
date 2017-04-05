@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    app:layout_behavior="@string/appbar_scrolling_view_behavior"
+    tools:context="nl.wingedsheep.handsfreeflashcards.MainActivity"
+    tools:showIn="@layout/app_bar_main">
+
+    <TextView
+        android:paddingTop="15dp"
+        android:paddingLeft="15dp"
+        android:paddingRight="15dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="No decks have been added yet. Click the button with the + sign to add a new deck."/>
+
+</android.support.constraint.ConstraintLayout>
