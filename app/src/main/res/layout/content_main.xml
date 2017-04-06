@@ -8,12 +8,6 @@
     tools:context="nl.wingedsheep.handsfreeflashcards.MainActivity"
     tools:showIn="@layout/app_bar_main">
 
-    <TextView
-        android:paddingTop="15dp"
-        android:paddingLeft="15dp"
-        android:paddingRight="15dp"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="No decks have been added yet. Click the button with the + sign to add a new deck."/>
+
 
 </android.support.constraint.ConstraintLayout>
