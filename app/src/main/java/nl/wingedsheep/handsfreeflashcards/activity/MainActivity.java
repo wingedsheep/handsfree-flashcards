@@ -1,4 +1,4 @@
-package nl.wingedsheep.handsfreeflashcards;
+package nl.wingedsheep.handsfreeflashcards.activity;
 
 import android.net.Uri;
 import android.os.Bundle;
@@ -12,6 +12,13 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+
+import nl.wingedsheep.handsfreeflashcards.R;
+import nl.wingedsheep.handsfreeflashcards.example.FrenchTestDeck;
+import nl.wingedsheep.handsfreeflashcards.fragment.DecksFragment;
+import nl.wingedsheep.handsfreeflashcards.fragment.TestFragment;
+import nl.wingedsheep.handsfreeflashcards.fragment.TestFragment2;
+import nl.wingedsheep.handsfreeflashcards.manager.PracticeRound;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener, TestFragment.OnFragmentInteractionListener, TestFragment2.OnFragmentInteractionListener {
@@ -31,14 +38,8 @@ public class MainActivity extends AppCompatActivity
         // Set action bar title
         setTitle("Decks");
 
-//        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-//        fab.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View view) {
-//                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-//                        .setAction("Action", null).show();
-//            }
-//        });
+        PracticeRound practiceRound = new PracticeRound(new FrenchTestDeck(), this);
+        practiceRound.playMinutes(15);
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
