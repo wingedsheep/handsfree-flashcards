@@ -4,12 +4,14 @@ import android.annotation.TargetApi;
 import android.content.Context;
 import android.os.Build;
 import android.speech.tts.TextToSpeech;
+import android.speech.tts.UtteranceProgressListener;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Locale;
 
 import nl.wingedsheep.handsfreeflashcards.Callback;
+import nl.wingedsheep.handsfreeflashcards.SpeechCallback;
 
 /**
  * Created by vincentbons on 11/04/17.
@@ -21,8 +23,28 @@ public class TextToSpeechInstance {
     private Context context;
     private TextToSpeech textToSpeech = null;
     private boolean initialized = false;
-    private ArrayList<String> beforeInitialized = new ArrayList<>();
+    private ArrayList<SpeechWithCallbacks> beforeInitialized = new ArrayList<>();
     private String googleTtsPackage = "com.google.android.tts", picoPackage = "com.svox.pico";
+    // TODO map from utteranceID to callback. Entry gets removed after done or error.
+    private SpeechCallback currentSpeechCallback;
+
+    private class SpeechWithCallbacks {
+        private String text;
+        private SpeechCallback speechCallback;
+
+        SpeechWithCallbacks(String text, SpeechCallback speechCallback) {
+            this.text = text;
+            this.speechCallback = speechCallback;
+        }
+
+        public String getText() {
+            return text;
+        }
+
+        public SpeechCallback getSpeechCallback() {
+            return speechCallback;
+        }
+    }
 
     public TextToSpeechInstance(final Context context, final Locale locale) {
         this.context = context;
@@ -33,9 +55,32 @@ public class TextToSpeechInstance {
                 if (status == TextToSpeech.SUCCESS) {
                     textToSpeech.setEngineByPackageName(googleTtsPackage);
                     textToSpeech.setLanguage(locale);
+                    UtteranceProgressListener utteranceProgressListener = new UtteranceProgressListener() {
+                        @Override
+                        public void onStart(String s) {
+                            if (currentSpeechCallback != null) {
+                                currentSpeechCallback.onStart();
+                            }
+                        }
+
+                        @Override
+                        public void onDone(String s) {
+                            if (currentSpeechCallback != null) {
+                                currentSpeechCallback.onDone();
+                            }
+                        }
+
+                        @Override
+                        public void onError(String s) {
+                            if (currentSpeechCallback != null) {
+                                currentSpeechCallback.onError();
+                            }
+                        }
+                    };
+                    textToSpeech.setOnUtteranceProgressListener(utteranceProgressListener);
                     initialized = true;
-                    for (String text : beforeInitialized) {
-                        speak(text);
+                    for (SpeechWithCallbacks speech : beforeInitialized) {
+                        speak(speech.getText(), speech.getSpeechCallback());
                     }
                 }
             }
@@ -51,12 +96,34 @@ public class TextToSpeechInstance {
                 if (status != TextToSpeech.ERROR) {
                     textToSpeech.setEngineByPackageName(googleTtsPackage);
                     textToSpeech.setLanguage(locale);
+                    UtteranceProgressListener utteranceProgressListener = new UtteranceProgressListener() {
+                        @Override
+                        public void onStart(String s) {
+                            if (currentSpeechCallback != null) {
+                                currentSpeechCallback.onStart();
+                            }
+                        }
+
+                        @Override
+                        public void onDone(String s) {
+                            if (currentSpeechCallback != null) {
+                                currentSpeechCallback.onDone();
+                            }
+                        }
+
+                        @Override
+                        public void onError(String s) {
+                            if (currentSpeechCallback != null) {
+                                currentSpeechCallback.onError();
+                            }
+                        }
+                    };
                     initialized = true;
                     if (callback != null) {
                         callback.onResponse(null);
                     }
-                    for (String text : beforeInitialized) {
-                        speak(text);
+                    for (SpeechWithCallbacks speech : beforeInitialized) {
+                        speak(speech.getText(), speech.getSpeechCallback());
                     }
                 } else {
                     callback.onFailure(new Exception("Failed to initialize"));
@@ -69,9 +136,10 @@ public class TextToSpeechInstance {
         return initialized;
     }
 
-    public void speak(String text) {
+    public void speak(String text, SpeechCallback speechCallback) {
+        currentSpeechCallback = speechCallback;
         if (!initialized) {
-            beforeInitialized.add(text);
+            beforeInitialized.add(new SpeechWithCallbacks(text, speechCallback));
         }
         else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             ttsGreater21(text);
@@ -91,12 +159,12 @@ public class TextToSpeechInstance {
     private void ttsUnder20(String text) {
         HashMap<String, String> map = new HashMap<>();
         map.put(TextToSpeech.Engine.KEY_PARAM_UTTERANCE_ID, "MessageId");
-        textToSpeech.speak(text, TextToSpeech.QUEUE_FLUSH, map);
+        textToSpeech.speak(text, TextToSpeech.QUEUE_ADD, map);
     }
 
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     private void ttsGreater21(String text) {
         String utteranceId=this.hashCode() + "";
-        textToSpeech.speak(text, TextToSpeech.QUEUE_FLUSH, null, utteranceId);
+        textToSpeech.speak(text, TextToSpeech.QUEUE_ADD, null, utteranceId);
     }
 }

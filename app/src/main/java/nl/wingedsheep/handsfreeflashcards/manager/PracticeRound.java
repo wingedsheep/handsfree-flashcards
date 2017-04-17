@@ -10,6 +10,7 @@ import java.util.Random;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+import nl.wingedsheep.handsfreeflashcards.SpeechCallback;
 import nl.wingedsheep.handsfreeflashcards.model.Card;
 import nl.wingedsheep.handsfreeflashcards.model.Deck;
 import nl.wingedsheep.handsfreeflashcards.model.LearningDirection;
@@ -26,6 +27,7 @@ public class PracticeRound {
     private boolean stopping = false;
     private LocalDateTime endTime = null;
     private Random random = new Random();
+    private ScheduledThreadPoolExecutor executorService = new ScheduledThreadPoolExecutor(1);
 
     public PracticeRound(Deck deck, Context context) {
         this.deck = deck;
@@ -43,18 +45,15 @@ public class PracticeRound {
         speechEngines.put(mainLocale, new TextToSpeechInstance(context, mainLocale));
     }
 
-    public void addCardTask(final ScheduledThreadPoolExecutor executorService) {
+    public void addCardTask(int delaySeconds) {
         Runnable task = new Runnable() {
             @Override
             public void run() {
                 Card randomCard = DeckManager.drawRandomCard(deck);
-                LearningDirection learningDirection = playCard(randomCard);
-                if (!stopping && LocalDateTime.now().isBefore(endTime)) {
-                    addAnswerTask(executorService, randomCard, learningDirection);
-                }
+                playCard(randomCard);
             }
         };
-        executorService.schedule(task, 5, TimeUnit.SECONDS);
+        executorService.schedule(task, delaySeconds, TimeUnit.SECONDS);
     }
 
     private boolean isInitialized() {
@@ -68,21 +67,19 @@ public class PracticeRound {
         return true;
     }
 
-    public void addAnswerTask(final ScheduledThreadPoolExecutor executorService, final Card card, final LearningDirection learningDirection) {
+    public void addAnswerTask(final Card card, final LearningDirection learningDirection, int delaySeconds) {
         Runnable task = new Runnable() {
             @Override
             public void run() {
                 playAnswer(card, learningDirection);
-                if (!stopping && LocalDateTime.now().isBefore(endTime)) {
-                    addCardTask(executorService);
-                }
             }
         };
-        executorService.schedule(task, 10, TimeUnit.SECONDS);
+        executorService.schedule(task, delaySeconds, TimeUnit.SECONDS);
     }
 
     public void playMinutes(final int minutes) {
         if (!isInitialized()) {
+            // TODO use callbacks of the speechInstances for this
             Thread t = new Thread(new Runnable() {
                 @Override
                 public void run() {
@@ -104,9 +101,8 @@ public class PracticeRound {
 
     private void startPlayMinutes(final int minutes) {
         stopping = false;
-        final ScheduledThreadPoolExecutor executorService = new ScheduledThreadPoolExecutor(1);
         endTime = LocalDateTime.now().plusMinutes(minutes);
-        addCardTask(executorService);
+        addCardTask(0);
     }
 
     public LearningDirection playCard(Card card) {
@@ -123,23 +119,120 @@ public class PracticeRound {
         }
     }
 
-    public LearningDirection playCard(Card card, LearningDirection learningDirection) {
-        speechEngines.get(mainLocale).speak("What is.");
-        if (learningDirection == LearningDirection.FRONT_TO_BACK) {
-            speechEngines.get(card.getFrontLocale()).speak(card.getFrontText());
-        } else if (learningDirection == LearningDirection.BACK_TO_FRONT) {
-            speechEngines.get(card.getBackLocale()).speak(card.getBackText());
-        }
+    public LearningDirection playCard(final Card card, final LearningDirection learningDirection) {
+        speechEngines.get(mainLocale).speak("What is.", new SpeechCallback() {
+            @Override
+            public void onStart() {
+
+            }
+
+            @Override
+            public void onDone() {
+                if (learningDirection == LearningDirection.FRONT_TO_BACK) {
+                    speechEngines.get(card.getFrontLocale()).speak(card.getFrontText(), new SpeechCallback() {
+                        @Override
+                        public void onStart() {
+
+                        }
+
+                        @Override
+                        public void onDone() {
+                            if (!stopping && LocalDateTime.now().isBefore(endTime)) {
+                                addAnswerTask(card, learningDirection, 10);
+                            }
+                        }
+
+                        @Override
+                        public void onError() {
+
+                        }
+                    });
+                } else if (learningDirection == LearningDirection.BACK_TO_FRONT) {
+                    speechEngines.get(card.getBackLocale()).speak(card.getBackText(), new SpeechCallback() {
+                        @Override
+                        public void onStart() {
+
+                        }
+
+                        @Override
+                        public void onDone() {
+                            if (!stopping && LocalDateTime.now().isBefore(endTime)) {
+                                addAnswerTask(card, learningDirection, 10);
+                            }
+                        }
+
+                        @Override
+                        public void onError() {
+
+                        }
+                    });
+                }
+            }
+
+            @Override
+            public void onError() {
+
+            }
+        });
+
         return learningDirection;
     }
 
-    public void playAnswer(Card card, LearningDirection learningDirection) {
-        speechEngines.get(mainLocale).speak("The answer is.");
-        if (learningDirection == LearningDirection.BACK_TO_FRONT) {
-            speechEngines.get(card.getFrontLocale()).speak(card.getFrontText());
-        } else {
-            speechEngines.get(card.getBackLocale()).speak(card.getBackText());
-        }
+    public void playAnswer(final Card card, final LearningDirection learningDirection) {
+        speechEngines.get(mainLocale).speak("The answer is.", new SpeechCallback() {
+            @Override
+            public void onStart() {
+
+            }
+
+            @Override
+            public void onDone() {
+                if (learningDirection == LearningDirection.BACK_TO_FRONT) {
+                    speechEngines.get(card.getFrontLocale()).speak(card.getFrontText(), new SpeechCallback() {
+                        @Override
+                        public void onStart() {
+
+                        }
+
+                        @Override
+                        public void onDone() {
+                            if (!stopping && LocalDateTime.now().isBefore(endTime)) {
+                                addCardTask(5);
+                            }
+                        }
+
+                        @Override
+                        public void onError() {
+
+                        }
+                    });
+                } else {
+                    speechEngines.get(card.getBackLocale()).speak(card.getBackText(), new SpeechCallback() {
+                        @Override
+                        public void onStart() {
+
+                        }
+
+                        @Override
+                        public void onDone() {
+                            if (!stopping && LocalDateTime.now().isBefore(endTime)) {
+                                addCardTask(5);
+                            }
+                        }
+
+                        @Override
+                        public void onError() {
+
+                        }
+                    });
+                }
+            }
+
+            @Override
+            public void onError() {
+
+            }
+        });
     }
 
     public void stop() {
