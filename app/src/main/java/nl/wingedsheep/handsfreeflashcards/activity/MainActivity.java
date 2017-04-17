@@ -1,6 +1,5 @@
 package nl.wingedsheep.handsfreeflashcards.activity;
 
-import android.net.Uri;
 import android.os.Bundle;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.Fragment;
@@ -14,14 +13,11 @@ import android.view.Menu;
 import android.view.MenuItem;
 
 import nl.wingedsheep.handsfreeflashcards.R;
-import nl.wingedsheep.handsfreeflashcards.example.FrenchTestDeck;
 import nl.wingedsheep.handsfreeflashcards.fragment.DecksFragment;
-import nl.wingedsheep.handsfreeflashcards.fragment.TestFragment;
-import nl.wingedsheep.handsfreeflashcards.fragment.TestFragment2;
-import nl.wingedsheep.handsfreeflashcards.manager.PracticeRound;
+import nl.wingedsheep.handsfreeflashcards.fragment.PracticeFragment;
 
 public class MainActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener, TestFragment.OnFragmentInteractionListener, TestFragment2.OnFragmentInteractionListener {
+        implements NavigationView.OnNavigationItemSelectedListener {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,9 +33,6 @@ public class MainActivity extends AppCompatActivity
 
         // Set action bar title
         setTitle("Decks");
-
-        PracticeRound practiceRound = new PracticeRound(new FrenchTestDeck(), this);
-        practiceRound.playMinutes(15);
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
@@ -92,18 +85,10 @@ public class MainActivity extends AppCompatActivity
         // Create a new fragment and specify the fragment to show based on nav item clicked
         Fragment fragment = null;
         Class fragmentClass = null;
-        if (id == R.id.nav_camera) {
-            // Handle the camera action
-        } else if (id == R.id.nav_gallery) {
-            fragmentClass = TestFragment.class;
-        } else if (id == R.id.nav_slideshow) {
-            fragmentClass = TestFragment2.class;
-        } else if (id == R.id.nav_manage) {
-
-        } else if (id == R.id.nav_share) {
-
-        } else if (id == R.id.nav_send) {
-
+        if (id == R.id.nav_decks) {
+            fragmentClass = DecksFragment.class;
+        } else if (id == R.id.nav_practice) {
+            fragmentClass = PracticeFragment.class;
         }
 
         try {
@@ -124,10 +109,5 @@ public class MainActivity extends AppCompatActivity
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
-    }
-
-    @Override
-    public void onFragmentInteraction(Uri uri) {
-
     }
 }
