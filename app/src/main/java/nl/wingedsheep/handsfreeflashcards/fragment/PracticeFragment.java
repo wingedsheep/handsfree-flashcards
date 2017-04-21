@@ -1,5 +1,7 @@
 package nl.wingedsheep.handsfreeflashcards.fragment;
 
+import android.app.Activity;
+import android.content.Context;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
@@ -22,6 +24,10 @@ public class PracticeFragment extends Fragment {
         return fragment;
     }
 
+    public String getTitle() {
+        return "Practice";
+    }
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -30,11 +36,13 @@ public class PracticeFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+        View view = inflater.inflate(R.layout.fragment_practice, container, false);
+
         practiceRound = new PracticeRound(new FrenchTestDeck(), getActivity());
         practiceRound.playMinutes(15);
 
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_practice, container, false);
+        return view;
     }
 
     @Override
@@ -43,5 +51,11 @@ public class PracticeFragment extends Fragment {
             practiceRound.stop();
         }
         super.onDestroyView();
+    }
+
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        ((Activity) context).setTitle(getTitle());
     }
 }

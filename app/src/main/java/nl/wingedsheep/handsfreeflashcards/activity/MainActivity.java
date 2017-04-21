@@ -13,11 +13,17 @@ import android.view.Menu;
 import android.view.MenuItem;
 
 import nl.wingedsheep.handsfreeflashcards.R;
+import nl.wingedsheep.handsfreeflashcards.fragment.AddDeckFragment;
 import nl.wingedsheep.handsfreeflashcards.fragment.DecksFragment;
 import nl.wingedsheep.handsfreeflashcards.fragment.PracticeFragment;
 
 public class MainActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener {
+        implements NavigationView.OnNavigationItemSelectedListener, DecksFragment.OnAddDeckButtonClickedListener {
+
+    private Fragment getFragment() {
+        Fragment fragment = getSupportFragmentManager().findFragmentById(R.id.flContent);
+        return fragment;
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,6 +48,8 @@ public class MainActivity extends AppCompatActivity
 
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
+
+        navigationView.setCheckedItem(0);
     }
 
     @Override
@@ -84,21 +92,16 @@ public class MainActivity extends AppCompatActivity
 
         // Create a new fragment and specify the fragment to show based on nav item clicked
         Fragment fragment = null;
-        Class fragmentClass = null;
         if (id == R.id.nav_decks) {
-            fragmentClass = DecksFragment.class;
+            fragment = DecksFragment.newInstance();
         } else if (id == R.id.nav_practice) {
-            fragmentClass = PracticeFragment.class;
+            fragment = PracticeFragment.newInstance();
         }
 
         try {
-            fragment = (Fragment) fragmentClass.newInstance();
             // Insert the fragment by replacing any existing fragment
             FragmentManager fragmentManager = getSupportFragmentManager();
-            fragmentManager.beginTransaction().replace(R.id.flContent, fragment).addToBackStack("test").commit();
-
-            // Set action bar title
-            setTitle(item.getTitle());
+            fragmentManager.beginTransaction().replace(R.id.flContent, fragment).commit();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -109,5 +112,16 @@ public class MainActivity extends AppCompatActivity
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
+    }
+
+    @Override
+    public void onAddDeckButtonClicked() {
+        AddDeckFragment addDeckFragment = AddDeckFragment.newInstance();
+        // Insert the fragment by replacing any existing fragment
+        FragmentManager fragmentManager = getSupportFragmentManager();
+        fragmentManager.beginTransaction().replace(R.id.flContent, addDeckFragment).addToBackStack(null).commit();
+
+        // Set action bar title
+        setTitle(addDeckFragment.getTitle());
     }
 }
